@@ -38,6 +38,24 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_lint_auto REQUIRED)
 
+  # Add test executable (don't include main.cpp to avoid multiple main definitions)
+  ament_add_gtest(test_temperature_subscriber
+    test/test_temperature_subscriber.cpp
+    src/temperature_subscriber.cpp  # Include the implementation without main
+  )
+  target_include_directories(test_temperature_subscriber PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+  ament_target_dependencies(test_temperature_subscriber
+    rclcpp
+    temperature_interfaces
+  )
+
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()

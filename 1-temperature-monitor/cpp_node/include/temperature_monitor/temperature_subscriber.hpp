@@ -23,6 +23,8 @@
 
 using TemperatureReading = temperature_interfaces::msg::TemperatureReading;
 
+class TestTemperatureSubscriber;
+
 class TemperatureSubscriber : public rclcpp::Node
 {
 public:
@@ -40,6 +42,7 @@ public:
   double get_max_temp() const {return max_temp_;}
 
 private:
+  friend class TestTemperatureSubscriber;
   // Member variables
   rclcpp::Subscription<TemperatureReading>::SharedPtr subscription_;
   rclcpp::TimerBase::SharedPtr stats_timer_;

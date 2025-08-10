@@ -4,7 +4,7 @@
   <name>temperature_monitor</name>
   <version>1.0.0</version>
   <description>Temperature monitoring system - C++ components</description>
-  <maintainer email="student@example.com">ROS Student</maintainer>
+  <maintainer email="ahmed.osama8282@gmail.com">ROS Student</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
