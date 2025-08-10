@@ -11,7 +11,9 @@ services:
     command: >
       bash -c "source /opt/ros/humble/setup.bash &&
                source /workspace/install/setup.bash &&
-               ros2 run temperature_monitor temperature_publisher --ros-args -p frequency:=1.0 -p temp_range:=30.0 -p sensor_id:=sensor_001"
+               ros2 run temperature_monitor temperature_publisher --ros-args -p frequency:=2.0 -p temp_range:=30.0 -p sensor_id:=sensor_001"
+    volumes:
+      - ./shared:/workspace/shared
     restart: unless-stopped
 
   temperature-subscriber:
@@ -29,6 +31,31 @@ services:
       bash -c "source /opt/ros/humble/setup.bash &&
                source /workspace/install/setup.bash &&
                ros2 run temperature_monitor temperature_subscriber"
+    volumes:
+      - ./shared:/workspace/shared
+    restart: unless-stopped
+
+  web-visualizer:
+    build:
+      context: .
+      dockerfile: ./web_viz/Dockerfile
+    container_name: temp_visualizer
+    environment:
+      - ROS_DOMAIN_ID=42
+      - PYTHONUNBUFFERED=1
+    networks:
+      - ros_network
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - temperature-publisher
+    command: >
+      bash -c "source /opt/ros/humble/setup.bash &&
+               source /workspace/install/setup.bash &&
+               python3 /workspace/src/web_visualizer.py"
+    volumes:
+      - ./shared:/workspace/shared
     restart: unless-stopped
 
   temperature-db:
