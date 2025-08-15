@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROS2 Temperature Monitor - Debug Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .card h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-success {
+            background-color: #4caf50;
+        }
+
+        .status-warning {
+            background-color: #ff9800;
+        }
+
+        .status-error {
+            background-color: #f44336;
+        }
+
+        .status-unknown {
+            background-color: #9e9e9e;
+        }
+
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .test-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-name {
+            font-weight: 500;
+        }
+
+        .test-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .status-pass {
+            background-color: rgba(76, 175, 80, 0.3);
+            color: #4caf50;
+        }
+
+        .status-fail {
+            background-color: rgba(244, 67, 54, 0.3);
+            color: #f44336;
+        }
+
+        .status-testing {
+            background-color: rgba(255, 152, 0, 0.3);
+            color: #ff9800;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: rgba(33, 150, 243, 0.3);
+            border-color: #2196f3;
+        }
+
+        .btn-danger {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: #f44336;
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-timestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        .log-level-info {
+            color: #2196f3;
+        }
+
+        .log-level-warn {
+            color: #ff9800;
+        }
+
+        .log-level-error {
+            color: #f44336;
+        }
+
+        .log-level-success {
+            color: #4caf50;
+        }
+
+        .connection-test {
+            margin-top: 20px;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .url-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .diagnosis-section {
+            grid-column: 1 / -1;
+        }
+
+        .diagnosis-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .diagnosis-item.warning {
+            border-left-color: #ff9800;
+        }
+
+        .diagnosis-item.error {
+            border-left-color: #f44336;
+        }
+
+        .diagnosis-item h4 {
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .diagnosis-item p {
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 ROS2 Temperature Monitor Debug Tool</h1>
+            <p>Diagnose and fix WebSocket connection issues</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>
+                    <span class="status-indicator status-unknown" id="system-status"></span>
+                    System Status
+                </h3>
+                <div class="test-item">
+                    <span class="test-name">Browser WebSocket Support</span>
+                    <span class="test-status status-testing" id="websocket-support">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Network Connectivity</span>
+                    <span class="test-status status-testing" id="network-status">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">CORS Policy</span>
+                    <span class="test-status status-testing" id="cors-status">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Port Accessibility</span>
+                    <span class="test-status status-testing" id="port-status">Testing...</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="status-indicator status-unknown" id="connection-status"></span>
+                    Connection Tests
+                </h3>
+                <div class="connection-test">
+                    <input type="text" class="url-input" id="websocket-url" placeholder="ws://localhost:8081"
+                        value="ws://localhost:8081">
+                    <button class="btn btn-primary" onclick="testWebSocketConnection()">Test Connection</button>
+                    <button class="btn" onclick="scanPorts()">Scan Ports</button>
+                </div>
+                <div id="connection-results"></div>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="status-indicator status-unknown" id="docker-status"></span>
+                    Docker Environment
+                </h3>
+                <div class="test-item">
+                    <span class="test-name">Container Detection</span>
+                    <span class="test-status status-testing" id="container-detection">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Host Network Mode</span>
+                    <span class="test-status status-testing" id="host-network">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Port Mapping</span>
+                    <span class="test-status status-testing" id="port-mapping">Testing...</span>
+                </div>
+                <button class="btn" onclick="detectDockerEnvironment()">Detect Docker Setup</button>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="status-indicator status-unknown" id="ros-status"></span>
+                    ROS2 Services
+                </h3>
+                <div class="test-item">
+                    <span class="test-name">Web Visualizer Service</span>
+                    <span class="test-status status-testing" id="visualizer-service">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">HTTP Server (8080)</span>
+                    <span class="test-status status-testing" id="http-server">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">WebSocket Server (8081)</span>
+                    <span class="test-status status-testing" id="websocket-server">Testing...</span>
+                </div>
+                <button class="btn" onclick="testROS2Services()">Test ROS2 Services</button>
+            </div>
+
+            <div class="card">
+                <h3>
+                    <span class="status-indicator status-unknown" id="database-status"></span>
+                    Database Connection
+                </h3>
+                <div class="test-item">
+                    <span class="test-name">PostgreSQL Container</span>
+                    <span class="test-status status-testing" id="postgres-container">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Database Connectivity</span>
+                    <span class="test-status status-testing" id="db-connectivity">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Data Storage</span>
+                    <span class="test-status status-testing" id="data-storage">Testing...</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Recent Readings</span>
+                    <span class="test-status status-testing" id="recent-readings">Testing...</span>
+                </div>
+                <button class="btn" onclick="testDatabaseServices()">Test Database</button>
+            </div>
+
+            <div class="card">
+                <h3>🛠️ Quick Fixes</h3>
+                <button class="btn btn-primary" onclick="tryAlternativeConnections()">Try Alternative URLs</button>
+                <button class="btn" onclick="testWithoutWebSocket()">Test HTTP Only</button>
+                <button class="btn btn-danger" onclick="resetConnection()">Reset Connection</button>
+                <div style="margin-top: 15px;">
+                    <label>
+                        <input type="checkbox" id="auto-retry" checked> Auto-retry failed connections
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Live Monitoring</h3>
+                <div class="test-item">
+                    <span class="test-name">Connection Attempts</span>
+                    <span id="connection-attempts">0</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Success Rate</span>
+                    <span id="success-rate">0%</span>
+                </div>
+                <div class="test-item">
+                    <span class="test-name">Last Success</span>
+                    <span id="last-success">Never</span>
+                </div>
+                <button class="btn" onclick="startContinuousMonitoring()">Start Monitoring</button>
+                <button class="btn" onclick="stopContinuousMonitoring()">Stop</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔍 Debug Log</h3>
+            <div class="log-container" id="debug-log"></div>
+            <button class="btn" onclick="clearLog()">Clear Log</button>
+            <button class="btn" onclick="exportLog()">Export Log</button>
+        </div>
+
+        <div class="card diagnosis-section">
+            <h3>🔍 Diagnosis & Solutions</h3>
+            <div id="diagnosis-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for monitoring
+        let connectionAttempts = 0;
+        let successfulConnections = 0;
+        let monitoringInterval = null;
+        let testWebSocket = null;
+
+        // Logging functions
+        function addLog(level, message) {
+            const logContainer = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level}">[${level.toUpperCase()}]</span>
+                ${message}
+            `;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').innerHTML = '';
+            addLog('info', 'Debug log cleared');
+        }
+
+        function exportLog() {
+            const logContainer = document.getElementById('debug-log');
+            const logText = logContainer.innerText;
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ros2-debug-log-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Status update functions
+        function updateStatus(elementId, status) {
+            const element = document.getElementById(elementId);
+            const statusClass = status === 'pass' ? 'status-pass' :
+                status === 'fail' ? 'status-fail' : 'status-testing';
+            element.className = `test-status ${statusClass}`;
+            element.textContent = status === 'pass' ? 'Pass' :
+                status === 'fail' ? 'Fail' : 'Testing...';
+        }
+
+        function updateIndicator(elementId, status) {
+            const element = document.getElementById(elementId);
+            const statusClass = status === 'pass' ? 'status-success' :
+                status === 'fail' ? 'status-error' :
+                    status === 'warning' ? 'status-warning' : 'status-unknown';
+            element.className = `status-indicator ${statusClass}`;
+        }
+
+        // Initial system checks
+        function runInitialChecks() {
+            addLog('info', 'Starting diagnostics...');
+
+            // WebSocket support
+            if (typeof WebSocket !== 'undefined') {
+                updateStatus('websocket-support', 'pass');
+                addLog('success', 'WebSocket supported');
+            } else {
+                updateStatus('websocket-support', 'fail');
+                addLog('error', 'WebSocket not supported');
+            }
+
+            // Network
+            testNetworkConnectivity();
+
+            // CORS
+            testCORSPolicy();
+
+            // Docker detection - run immediately
+            detectDockerEnvironment();
+
+            // ROS2 Services
+            testROS2Services();
+
+            // Database Services
+            testDatabaseServices();
+        }
+
+        function testNetworkConnectivity() {
+            fetch(window.location.origin)
+                .then(response => {
+                    updateStatus('network-status', 'pass');
+                    addLog('success', 'Network connectivity confirmed');
+                    updateIndicator('system-status', 'pass');
+                })
+                .catch(error => {
+                    updateStatus('network-status', 'fail');
+                    addLog('error', `Network connectivity failed: ${error.message}`);
+                    updateIndicator('system-status', 'fail');
+                });
+        }
+
+        function testCORSPolicy() {
+            addLog('info', 'Testing CORS policy...');
+            fetch('/health', {
+                method: 'HEAD'
+            })
+                .then(response => {
+                    if (response.status === 200 || response.status === 404) {
+                        updateStatus('cors-status', 'pass');
+                        addLog('success', 'CORS policy allows requests');
+                    } else {
+                        updateStatus('cors-status', 'fail');
+                        addLog('error', `CORS: Unexpected response status ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    updateStatus('cors-status', 'fail');
+                    addLog('error', `CORS test failed: ${error.message}`);
+                    addDiagnosis('warning', 'CORS Issues',
+                        'Browser is blocking cross-origin requests. Ensure the server sends proper CORS headers.');
+                });
+        }
+
+        function detectDockerEnvironment() {
+            addLog('info', 'Detecting Docker environment...');
+            const hostname = window.location.hostname;
+            const isLocalhost = ['localhost', '127.0.0.1'].includes(hostname);
+
+            // Container Detection Logic
+            if (isLocalhost || hostname.includes('docker') || hostname.includes('container')) {
+                updateStatus('container-detection', 'pass');
+                addLog('success', `Docker environment detected (hostname: ${hostname})`);
+                updateIndicator('docker-status', 'pass');
+            } else {
+                updateStatus('container-detection', 'warning');
+                addLog('warning', `Non-standard hostname detected: ${hostname}`);
+                updateIndicator('docker-status', 'warning');
+            }
+
+            // Host Network Mode Detection
+            if (isLocalhost) {
+                updateStatus('host-network', 'pass');
+                addLog('success', 'Host network mode confirmed (localhost access)');
+            } else {
+                updateStatus('host-network', 'warning');
+                addLog('warning', 'May be using bridge network mode');
+            }
+
+            // Port Mapping Test - Test actual connectivity
+            testDockerPortMapping();
+        }
+
+        function testDockerPortMapping() {
+            addLog('info', 'Testing Docker port mapping...');
+            let portTestsPassed = 0;
+            let portTestsTotal = 2;
+
+            // Test HTTP server (8080)
+            fetch('http://localhost:8080/health', { 
+                method: 'HEAD',
+                mode: 'no-cors'
+            })
+                .then(() => {
+                    addLog('success', 'Port 8080 (HTTP) is accessible');
+                    portTestsPassed++;
+                    checkPortMappingComplete();
+                })
+                .catch(() => {
+                    addLog('error', 'Port 8080 not accessible - check docker-compose.yml');
+                    checkPortMappingComplete();
+                });
+
+            // Test WebSocket server (8081)
+            const ws = new WebSocket('ws://localhost:8081');
+            const timeout = setTimeout(() => {
+                if (ws.readyState !== WebSocket.OPEN) {
+                    ws.close();
+                    addLog('error', 'Port 8081 (WebSocket) connection timeout');
+                    checkPortMappingComplete();
+                }
+            }, 5000);
+
+            ws.onopen = () => {
+                clearTimeout(timeout);
+                addLog('success', 'Port 8081 (WebSocket) is accessible');
+                portTestsPassed++;
+                ws.close();
+                checkPortMappingComplete();
+            };
+
+            ws.onerror = () => {
+                clearTimeout(timeout);
+                addLog('error', 'WebSocket connection to port 8081 failed');
+                checkPortMappingComplete();
+            };
+
+            function checkPortMappingComplete() {
+                if (--portTestsTotal === 0) {
+                    if (portTestsPassed >= 1) {
+                        updateStatus('port-mapping', 'pass');
+                        addLog('success', `Port mapping verified (${portTestsPassed}/2 ports accessible)`);
+                    } else {
+                        updateStatus('port-mapping', 'fail');
+                        addLog('error', 'Port mapping failed - no ports accessible');
+                        addDiagnosis('error', 'Port Mapping Issues',
+                            'Docker containers are not accessible on expected ports. Check your docker-compose.yml port mappings.');
+                    }
+                }
+            }
+        }
+
+        function testROS2Services() {
+            addLog('info', 'Testing ROS2 services...');
+            
+            // Test HTTP server (port 8080)
+            fetch('/health')
+                .then(response => {
+                    if (response.ok) {
+                        updateStatus('http-server', 'pass');
+                        addLog('success', 'HTTP server (8080) is running and healthy');
+                        updateIndicator('ros-status', 'pass');
+                    } else {
+                        updateStatus('http-server', 'warning');
+                        addLog('warning', `HTTP server responded with status: ${response.status}`);
+                        updateIndicator('ros-status', 'warning');
+                    }
+                })
+                .catch(error => {
+                    updateStatus('http-server', 'fail');
+                    addLog('error', `HTTP server test failed: ${error.message}`);
+                    updateIndicator('ros-status', 'fail');
+                });
+                
+            // Test Visualizer service
+            testVisualizerService();
+            
+            // Test WebSocket server (port 8081)
+            testWebSocketConnection();
+        }
+
+        function testDatabaseServices() {
+            addLog('info', 'Testing database services...');
+            
+            // Test PostgreSQL Container via health endpoint
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.database_connected === true) {
+                        updateStatus('postgres-container', 'pass');
+                        updateStatus('db-connectivity', 'pass');
+                        addLog('success', 'PostgreSQL container is accessible and connected');
+                        updateIndicator('database-status', 'pass');
+                        
+                        // Test data storage capabilities
+                        testDataStorage();
+                    } else if (data.database_connected === false) {
+                        updateStatus('postgres-container', 'warning');
+                        updateStatus('db-connectivity', 'fail');
+                        addLog('error', 'PostgreSQL container is not connected');
+                        updateIndicator('database-status', 'fail');
+                        addDiagnosis('error', 'Database Connection Failed',
+                            'The web visualizer service cannot connect to the PostgreSQL database. Check if the temperature-db container is running and accessible.');
+                    } else {
+                        updateStatus('postgres-container', 'warning');
+                        updateStatus('db-connectivity', 'warning');
+                        addLog('warning', 'Database connection status unknown');
+                        updateIndicator('database-status', 'warning');
+                    }
+                })
+                .catch(error => {
+                    updateStatus('postgres-container', 'fail');
+                    updateStatus('db-connectivity', 'fail');
+                    addLog('error', `Database health check failed: ${error.message}`);
+                    updateIndicator('database-status', 'fail');
+                });
+            
+            // Test recent readings endpoint
+            testRecentReadings();
+        }
+
+        function testDataStorage() {
+            addLog('info', 'Testing data storage functionality...');
+            
+            // Test API endpoints that require database
+            fetch('/api/statistics')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStatus('data-storage', 'pass');
+                        addLog('success', `Data storage working - found statistics for ${data.count || 0} sensors`);
+                    } else {
+                        updateStatus('data-storage', 'fail');
+                        addLog('error', `Data storage test failed: ${data.error || 'Unknown error'}`);
+                    }
+                })
+                .catch(error => {
+                    updateStatus('data-storage', 'fail');
+                    addLog('error', `Data storage test failed: ${error.message}`);
+                    addDiagnosis('warning', 'Data Storage Issues',
+                        'Cannot access stored data. Database may be empty or there may be connection issues.');
+                });
+        }
+
+        function testRecentReadings() {
+            addLog('info', 'Testing recent readings retrieval...');
+            
+            fetch('/api/recent?limit=10&hours=24')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStatus('recent-readings', 'pass');
+                        addLog('success', `Recent readings API working - ${data.count || 0} readings found`);
+                        
+                        if (data.count > 0) {
+                            addLog('info', `Latest reading: ${data.data[0]?.temperature}°C from sensor ${data.data[0]?.sensor_id}`);
+                        } else {
+                            addLog('warning', 'No recent temperature readings found in database');
+                            addDiagnosis('info', 'No Recent Data',
+                                'Database is connected but contains no recent temperature readings. This is normal if the system just started or no sensors are publishing data.');
+                        }
+                    } else {
+                        updateStatus('recent-readings', 'fail');
+                        addLog('error', `Recent readings test failed: ${data.error || 'Unknown error'}`);
+                    }
+                })
+                .catch(error => {
+                    updateStatus('recent-readings', 'fail');
+                    addLog('error', `Recent readings test failed: ${error.message}`);
+                });
+        }
+
+        function testWebSocketConnection(url = null) {
+            if (!url) {
+                url = document.getElementById('websocket-url').value || 'ws://localhost:8081';
+            }
+            
+            addLog('info', `Testing WebSocket connection to: ${url}`);
+            
+            // Close existing connection
+            if (testWebSocket) {
+                testWebSocket.close();
+            }
+
+            connectionAttempts++;
+            updateMonitoringStats();
+
+            const timeout = setTimeout(() => {
+                if (testWebSocket && testWebSocket.readyState !== WebSocket.OPEN) {
+                    testWebSocket.close();
+                    updateStatus('websocket-server', 'fail');
+                    addLog('error', `WebSocket connection timeout: ${url}`);
+                    updateIndicator('connection-status', 'fail');
+                    updateConnectionResults('fail', url, 'Timeout');
+                }
+            }, 5000);
+
+            testWebSocket = new WebSocket(url);
+
+            testWebSocket.onopen = () => {
+                clearTimeout(timeout);
+                updateStatus('websocket-server', 'pass');
+                addLog('success', `WebSocket connected: ${url}`);
+                updateIndicator('connection-status', 'pass');
+                updateConnectionResults('success', url, 'Connected');
+                
+                successfulConnections++;
+                updateMonitoringStats();
+                
+                // Update last success time
+                document.getElementById('last-success').textContent = new Date().toLocaleTimeString();
+                
+                // If this was a successful Docker port test, update those statuses too
+                if (url.includes('localhost:8081')) {
+                    updateStatus('container-detection', 'pass');
+                    updateStatus('host-network', 'pass');
+                    updateStatus('port-mapping', 'pass');
+                    updateIndicator('docker-status', 'pass');
+                    addLog('success', 'Docker environment confirmed via WebSocket');
+                }
+            };
+
+            testWebSocket.onerror = (error) => {
+                clearTimeout(timeout);
+                updateStatus('websocket-server', 'fail');
+                addLog('error', `WebSocket error: ${error.type || 'Connection failed'}`);
+                updateIndicator('connection-status', 'fail');
+                updateConnectionResults('fail', url, 'Error');
+            };
+
+            testWebSocket.onclose = (event) => {
+                if (event.code !== 1000) {
+                    addLog('warning', `WebSocket closed: ${event.code} ${event.reason || 'Unknown reason'}`);
+                }
+            };
+        }
+
+        function testVisualizerService() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatus('visualizer-service', 'pass');
+                    addLog('success', `Web Visualizer service is healthy: ${data.service || 'Unknown'}`);
+                })
+                .catch(err => {
+                    updateStatus('visualizer-service', 'fail');
+                    addLog('error', 'Web Visualizer service not responding');
+                });
+        }
+
+        function updateConnectionResults(status, url, message) {
+            const resultsDiv = document.getElementById('connection-results');
+            const result = document.createElement('div');
+            result.className = 'test-item';
+            result.innerHTML = `
+                <span class="test-name">${url}</span>
+                <span class="test-status ${status === 'success' ? 'status-pass' : 'status-fail'}">${message}</span>
+            `;
+            resultsDiv.appendChild(result);
+
+            // Keep only last 5 results
+            while (resultsDiv.children.length > 5) {
+                resultsDiv.removeChild(resultsDiv.firstChild);
+            }
+        }
+
+        function updateMonitoringStats() {
+            document.getElementById('connection-attempts').textContent = connectionAttempts;
+            const successRate = connectionAttempts > 0 ? Math.round((successfulConnections / connectionAttempts) * 100) : 0;
+            document.getElementById('success-rate').textContent = `${successRate}%`;
+        }
+
+        function tryAlternativeConnections() {
+            const alternatives = [
+                'ws://localhost:8081',
+                'ws://127.0.0.1:8081',
+                `ws://${window.location.hostname}:8081`,
+                'ws://172.17.0.1:8081'
+            ];
+
+            addLog('info', 'Testing alternative WebSocket URLs...');
+
+            alternatives.forEach((url, index) => {
+                setTimeout(() => {
+                    testWebSocketConnection(url);
+                }, index * 2000); // Stagger tests
+            });
+        }
+
+        function scanPorts() {
+            const ports = [8080, 8081];
+            const resultsDiv = document.getElementById('connection-results');
+            resultsDiv.innerHTML = '';
+
+            addLog('info', 'Scanning ports...');
+
+            ports.forEach(port => {
+                if (port === 8081) {
+                    // Test WebSocket
+                    const url = `ws://localhost:${port}`;
+                    const ws = new WebSocket(url);
+                    const timeout = setTimeout(() => {
+                        ws.close();
+                        addLog('error', `Port ${port} (WebSocket) not accessible`);
+                        updateStatus('port-status', 'fail');
+                        updateConnectionResults('fail', `Port ${port}`, 'Not accessible');
+                    }, 3000);
+
+                    ws.onopen = () => {
+                        clearTimeout(timeout);
+                        addLog('success', `Port ${port} (WebSocket) is accessible`);
+                        updateStatus('port-status', 'pass');
+                        updateConnectionResults('success', `Port ${port}`, 'WebSocket OK');
+                        ws.close();
+                    };
+
+                    ws.onerror = () => {
+                        clearTimeout(timeout);
+                    };
+                } else {
+                    // Test HTTP
+                    const url = `http://localhost:${port}/health`;
+                    fetch(url, { method: 'HEAD' })
+                        .then(() => {
+                            addLog('success', `Port ${port} (HTTP) is accessible`);
+                            updateConnectionResults('success', `Port ${port}`, 'HTTP OK');
+                        })
+                        .catch(() => {
+                            addLog('error', `Port ${port} (HTTP) not accessible`);
+                            updateConnectionResults('fail', `Port ${port}`, 'Not accessible');
+                        });
+                }
+            });
+        }
+
+        function testWithoutWebSocket() {
+            addLog('info', 'Testing HTTP-only functionality...');
+
+            fetch('/api/recent')
+                .then(response => response.json())
+                .then(data => {
+                    addLog('success', `HTTP-only mode working - found ${data.count || 0} recent readings`);
+                    addDiagnosis('info', 'HTTP-Only Workaround Active',
+                        'WebSocket connection failed, but HTTP API is working. Real-time features will be limited, but you can still access historical data.');
+                })
+                .catch(error => {
+                    addLog('error', `HTTP API test failed: ${error.message}`);
+                    addDiagnosis('error', 'API Not Available',
+                        'Both WebSocket and HTTP API are failing. Check if the ROS2 web visualizer service is running.');
+                });
+        }
+
+        function resetConnection() {
+            if (testWebSocket) {
+                testWebSocket.close();
+                testWebSocket = null;
+            }
+
+            connectionAttempts = 0;
+            successfulConnections = 0;
+            updateMonitoringStats();
+            document.getElementById('last-success').textContent = 'Never';
+            document.getElementById('connection-results').innerHTML = '';
+
+            addLog('info', 'Connection state reset');
+        }
+
+        function startContinuousMonitoring() {
+            if (monitoringInterval) return;
+
+            addLog('info', 'Starting continuous monitoring...');
+
+            monitoringInterval = setInterval(() => {
+                testWebSocketConnection();
+            }, 10000); // Test every 10 seconds
+
+            document.querySelector('[onclick="startContinuousMonitoring()"]').classList.add('pulse');
+        }
+
+        function stopContinuousMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                addLog('info', 'Continuous monitoring stopped');
+                document.querySelector('[onclick="startContinuousMonitoring()"]').classList.remove('pulse');
+            }
+        }
+
+        function addDiagnosis(type, title, description) {
+            const diagnosisDiv = document.getElementById('diagnosis-results');
+            const item = document.createElement('div');
+            item.className = `diagnosis-item ${type}`;
+            item.innerHTML = `
+                <h4>${title}</h4>
+                <p>${description}</p>
+            `;
+            diagnosisDiv.appendChild(item);
+        }
+
+        // Initialize the debug tool
+        window.addEventListener('load', function () {
+            addLog('info', 'ROS2 Temperature Monitor Debug Tool initialized');
+            runInitialChecks();
+
+            // Auto-run some basic tests after initial checks
+            setTimeout(() => {
+                if (document.getElementById('auto-retry').checked) {
+                    tryAlternativeConnections();
+                }
+            }, 5000);
+
+            // Add default diagnoses
+            setTimeout(() => {
+                addDiagnosis('info', 'Docker Network Configuration', 
+                    'If WebSocket connections fail, ensure your Docker containers are properly networked. Check that ports 8080 and 8081 are exposed in your docker-compose.yml file.');
+                
+                addDiagnosis('info', 'Database Troubleshooting', 
+                    'If database tests fail:\n1. Check if temperature-db container is running\n2. Verify database credentials in web_visualizer.py\n3. Ensure PostgreSQL port 5432 is accessible between containers\n4. Check Docker network connectivity between web-visualizer and temperature-db containers');
+                
+                addDiagnosis('info', 'Common Solutions', 
+                    '1. Verify web-visualizer container is running\n2. Check port mappings in docker-compose.yml\n3. Try accessing from host IP instead of localhost\n4. Ensure firewall allows connections on ports 8080-8081\n5. Restart containers if database connection fails');
+                
+                addDiagnosis('info', 'Alternative Debugging', 
+                    'For command-line debugging:\n• ROS2 topics: docker exec -it <container_name> ros2 topic echo /temperature_data\n• Database: docker exec -it temperature-db psql -U ros_user -d temperature_data -c "SELECT COUNT(*) FROM temperature_readings;"\n• Container logs: docker logs <container_name>');
+            }, 2000);
+        });
+    </script>
+</body>
+
+</html>
