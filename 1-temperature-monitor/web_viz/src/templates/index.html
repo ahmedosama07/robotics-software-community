@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Enhanced Temperature Monitor</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/lib/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌡️ Enhanced ROS2 Temperature Monitor</h1>
+            <div id="status" class="status disconnected"> 🔌 Connecting to data stream... </div>
+            <div id="debug-info" class="debug-info" style="display:none;"></div>
+        </div>
+        <div class="tabs">
+            <button class="tab active" data-tab="live">📊 Live Data</button>
+            <button class="tab" data-tab="history">📈 History</button>
+            <button class="tab" data-tab="statistics">📊 Statistics</button>
+            <button class="tab" data-tab="trends">📉 Trends</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Live Data Tab -->
+            <div id="live-tab" class="tab-pane active">
+                <div class="grid">
+                    <div class="card">
+                        <h3>Current Reading</h3>
+                        <div class="temp-display" id="temperature">--°C</div>
+                        <div class="humidity-display" id="humidity">--%</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Sensor ID</div>
+                                <div class="info-value" id="sensor-id">--</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Location</div>
+                                <div class="info-value" id="location">--</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Last Update</div>
+                                <div class="info-value" id="timestamp">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Real-time Chart</h3>
+                        <div class="chart-container">
+                            <canvas id="liveChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-pane">
+                <div class="controls">
+                    <label>Time Range:</label>
+                    <select class="select" id="history-hours">
+                        <option value="1">Last Hour</option>
+                        <option value="6">Last 6 Hours</option>
+                        <option value="24" selected>Last 24 Hours</option>
+                        <option value="168">Last Week</option>
+                    </select>
+
+                    <label>Sensor:</label>
+                    <select class="select" id="history-sensor">
+                        <option value="">All Sensors</option>
+                    </select>
+
+                    <button class="btn" id="refresh-history">Refresh</button>
+                    <button class="btn" id="export-history">Export CSV</button>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Temperature History</h3>
+                        <div class="chart-container">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Hourly Averages</h3>
+                        <div class="chart-container">
+                            <canvas id="hourlyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Readings</h3>
+                    <div id="history-table-container">
+                        <div class="loading">Loading historical data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statistics-tab" class="tab-pane">
+                <div class="controls">
+                    <button class="btn" id="refresh-stats">Refresh Statistics</button>
+                    <button class="btn" id="export-stats">Export Report</button>
+                </div>
+
+                <div id="statistics-content">
+                    <div class="loading">Loading statistics...</div>
+                </div>
+            </div>
+
+            <!-- Trends Tab -->
+            <div id="trends-tab" class="tab-pane">
+                <div class="controls">
+                    <label>Analysis Period:</label>
+                    <select class="select" id="trends-hours">
+                        <option value="1">Last Hour</option>
+                        <option value="6">Last 6 Hours</option>
+                        <option value="24" selected>Last 24 Hours</option>
+                        <option value="168">Last Week</option>
+                    </select>
+
+                    <label>Sensor:</label>
+                    <select class="select" id="trends-sensor">
+                        <option value="">All Sensors</option>
+                    </select>
+
+                    <button class="btn" id="analyze-trends">Analyze</button>
+                </div>
+
+                <div id="trends-content">
+                    <div class="loading">Loading trend analysis...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+</body>
+
+</html>
