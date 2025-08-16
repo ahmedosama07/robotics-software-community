@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     python3-colcon-common-extensions \
     python3-rosdep \
     libpq-dev \
+    lcov \
+    gcovr \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up workspace

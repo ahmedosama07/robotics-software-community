@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies
 RUN pip3 install \
-    numpy
+    numpy \
+    pytest-cov
 
 # Set up workspace
 WORKDIR /workspace
