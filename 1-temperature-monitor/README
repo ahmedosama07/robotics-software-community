@@ -1,91 +1,189 @@
 # ROS2 Docker Exercise: Cross-Language Temperature Monitor
 
-## Exercise Overview
-Design and implement a distributed ROS2 system using Docker containers where a Python node publishes simulated temperature readings and a C++ node subscribes, processes, and displays temperature statistics.
+## Overview
+A distributed ROS2 system using Docker containers where a Python node publishes simulated temperature readings and a C++ node subscribes, processes, and displays temperature statistics. The system includes web-based visualization, database persistence, and comprehensive monitoring tools.
 
-## Learning Objectives
-By completing this exercise, students will:
-1. Configure Docker containers for ROS2 applications
-2. Set up inter-container networking using Docker Compose
-3. Implement ROS2 publishers in Python (rclpy)
-4. Implement ROS2 subscribers in C++ (rclcpp)
-5. Handle ROS2 message serialization across languages
-6. Debug distributed ROS2 systems in containerized environments
+## Features
+### ✅ Core Functionality
 
-## Prerequisites
-- Basic knowledge of ROS2 concepts (nodes, topics, messages)
-- Familiarity with Python and C++
-- Docker and Docker Compose installed
-- Understanding of basic networking concepts
+- Python temperature publisher with realistic data simulation
+- C++ subscriber with moving average, min/max tracking, and trend detection
+- Custom TemperatureReading message type with full metadata
 
-## Exercise Tasks
+### 🔧 Advanced Features
 
-### Task 1: Environment Setup
-1. Create a project structure with separate directories for Python and C++ nodes
-2. Write Dockerfiles for both containers based on ROS2 Humble
-3. Configure a docker-compose.yml file with proper networking
+- Docker Compose orchestration with custom bridge network
+- QoS profiles for reliable communication
+- Graceful shutdown handling with signal handlers
+- Multi-level logging (INFO, WARN, ERROR)
 
-### Task 2: Message Definition
-1. Create a custom message type for temperature data including:
-   - Temperature value (float)
-   - Timestamp
-   - Sensor ID (string)
-   - Unit (Celsius/Fahrenheit)
+### 🌐 Web Visualization
 
-### Task 3: Python Publisher Implementation
-1. Create a Python node that publishes temperature readings every second
-2. Implement realistic temperature variations (sine wave + random noise)
-3. Add command-line arguments for:
-   - Publishing frequency
-   - Temperature range
-   - Sensor ID
+- Real-time charts using Chart.js
+- Historical data viewer with time range selection
+- Live statistics dashboard
+- WebSocket server bridging ROS2 to web clients
 
-### Task 4: C++ Subscriber Implementation
-1. Create a C++ node that subscribes to temperature data
-2. Calculate and display:
-   - Moving average (last 10 readings)
-   - Min/max temperatures
-   - Temperature trend (rising/falling/stable)
-3. Implement a warning system for temperatures outside normal range
+### 💾 Data Persistence
 
-### Task 5: Advanced Features (10 points)
-1. Add QoS settings for reliable communication
-2. Implement graceful shutdown handling
-3. Add logging with different severity levels
-4. Create a launch file that starts both containers
+- PostgreSQL database container
+- Automatic schema initialization
+- Data insertion from Python node
+- Statistical views for analytics
 
-### Bonus Task: Challenges
-1. Add a third container with a web-based visualization (ROS2 bridge to WebSocket)
-2. Implement data persistence using a database container
-3. Create unit tests for both nodes
-4. Add performance monitoring and metrics collection
+### 🧪 Testing & Monitoring
 
-## Hints and Guidelines
+- Unit tests for both Python and C++ nodes
+- Database integration tests
+- Code coverage reporting (Python & C++)
+- Continuous monitoring dashboard
+- Comprehensive debug tool
 
-### Docker Networking
-- Use a custom bridge network in docker-compose
-- Ensure containers can resolve each other by name
-- ROS2 uses DDS which requires specific ports - consider using host networking or properly configured bridge
+### Prerequisites
+- Docker and Docker Compose
+- Python 3.8+
+- Git
+- Web browser for visualization
 
-### ROS2 Discovery
-- Set ROS_DOMAIN_ID consistently across containers
-- Configure DDS discovery for Docker (may need to set RMW_IMPLEMENTATION)
+## Quick Start
+1. Clone the repository
+```bash
+git clone git@github.com:ahmedosama07/robotics-software-community.git
+cd robotics-software-community/1-temperature-monitor
+```
+2. Build and run the system
+```bash
+docker compose up --build
+```
 
-### Message Synchronization
-- Use proper QoS profiles for real-time data
-- Handle message drops gracefully
-- Consider time synchronization between containers
+3. Access the interfaces
+- Web Dashboard: http://localhost:8080
+- Debug Tool: http://localhost:8080/debug.html
+- ROS2 Nodes: Automatically connected via Docker network
 
-### Debugging Tips
-- Use `ros2 topic list` and `ros2 topic echo` for debugging
-- Check DDS discovery with `ros2 multicast receive/send`
-- Monitor container logs with `docker-compose logs -f`
+## Makefile Commands
+The system provides a comprehensive Makefile for easy management:
+```bash
+# Build all containers
+make build
 
-## Evaluation Criteria
-- Code quality and organization
-- Proper use of ROS2 concepts
-- Docker configuration correctness
-- Error handling and robustness
-- Documentation and comments
-- Advanced features implementation
+# Run the complete system
+make run
 
+# Run all tests
+make test
+
+# Run Python unit tests
+make test-python
+
+# Run C++ unit tests  
+make test-cpp
+
+# Run database integration tests
+make test-db
+
+# Generate coverage reports
+make coverage
+
+# View coverage report URLs
+make coverage-report
+
+# Clean build artifacts
+make clean
+
+# Show all available commands
+make help
+```
+
+## Configuration
+### Python Publisher Parameters
+Configured in `launch/temperature_system.launch.py`:
+
+- `frequency`: Publishing frequency in Hz (default: 1.0)
+- `temp_range`: Temperature variation range (default: 30.0)
+- `sensor_id`: Unique sensor identifier (default: 'sensor_001')
+- `base_temp`: Base temperature in °C (default: 20.0)
+- `location`: Sensor location (default: 'lab')
+
+### C++ Subscriber Settings
+- Moving average window: 10 readings
+- Temperature warning thresholds: < 10°C or > 35°C
+- Statistics update interval: 5 seconds
+
+### Web Interface
+The web interface provides three main views:
+
+1. **Live Data (index.html)**
+- Real-time temperature chart
+- Current sensor readings
+- Connection status indicators
+
+2. **Historical Data**
+- Time-range selection
+- Table of recent readings
+- Hourly averages
+
+3. **Statistics Dashboard**
+- Sensor performance metrics
+- Reading count and averages
+- Min/max temperatures
+
+### Database Schema
+The PostgreSQL database includes:
+
+**Table**: `temperature_readings`
+
+- `id`: Serial primary key
+- `sensor_id`: VARCHAR(100)
+- `temperature`: DOUBLE PRECISION
+- `humidity`: DOUBLE PRECISION
+- `unit`: VARCHAR(20)
+- `location`: VARCHAR(200)
+- `timestamp`: TIMESTAMPTZ with default
+
+**Indexes**:
+
+- `idx_sensor_id`: Performance optimization
+- `idx_timestamp`: Time-based queries
+- `idx_sensor_timestamp`: Combined queries
+
+**Views**:
+
+- `recent_readings`: Last 24 hours of data
+- `sensor_statistics`: Aggregated statistics by senso
+
+## Development
+### Debugging
+Use the debug tool at /debug.html to diagnose:
+
+- Docker container connectivity
+- Network configuration
+- ROS2 topic discovery
+- Database connection status
+- WebSocket functionality
+
+### Code Coverage
+Coverage reports are generated in:
+
+- Python: `coverage/html/python/index.html`
+- C++: `coverage/html/cpp/index.html`
+
+## Troubleshooting
+### Common Issues
+1. Containers not communicating
+
+- Verify all containers are on the same network
+- Check `ROS_DOMAIN_ID=42` is set consistently
+- Ensure firewall isn't blocking Docker ports
+
+2. Web interface not loading
+
+- Wait 30 seconds for containers to initialize
+- Check if `web-visualizer` container is running
+- Verify port 8080 is available
+
+3. Database connection errors
+
+- Check if `temperature-db` container is healthy
+- Verify database credentials in Python node
+- Run make `test-db` to diagnose
