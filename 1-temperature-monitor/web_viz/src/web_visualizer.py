@@ -785,7 +785,7 @@ def main(args=None):
     app.router.add_get('/api/statistics', web_server.api_statistics)
     app.router.add_get('/api/hourly', web_server.api_hourly_averages)
     app.router.add_get('/api/trends', web_server.api_trends)
-    app.router.add_get('/health', web_server.health_check)
+    app.router.add_get('/api/health', web_server.health_check)
     async def run_servers():
         """Run both HTTP and WebSocket servers."""
         try:

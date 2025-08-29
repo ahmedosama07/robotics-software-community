@@ -519,7 +519,7 @@
 
         function testCORSPolicy() {
             addLog('info', 'Testing CORS policy...');
-            fetch('/health', {
+            fetch('/api/health', {
                 method: 'HEAD'
             })
                 .then(response => {
@@ -574,7 +574,7 @@
             let portTestsTotal = 2;
 
             // Test HTTP server (8080)
-            fetch('http://localhost:8080/health', { 
+            fetch('http://localhost:8080/api/health', { 
                 method: 'HEAD',
                 mode: 'no-cors'
             })
@@ -631,7 +631,7 @@
             addLog('info', 'Testing ROS2 services...');
             
             // Test HTTP server (port 8080)
-            fetch('/health')
+            fetch('/api/health')
                 .then(response => {
                     if (response.ok) {
                         updateStatus('http-server', 'pass');
@@ -660,7 +660,7 @@
             addLog('info', 'Testing database services...');
             
             // Test PostgreSQL Container via health endpoint
-            fetch('/health')
+            fetch('/api/health')
                 .then(response => response.json())
                 .then(data => {
                     if (data.database_connected === true) {
@@ -813,7 +813,7 @@
         }
 
         function testVisualizerService() {
-            fetch('/health')
+            fetch('/api/health')
                 .then(response => response.json())
                 .then(data => {
                     updateStatus('visualizer-service', 'pass');
@@ -896,7 +896,7 @@
                     };
                 } else {
                     // Test HTTP
-                    const url = `http://localhost:${port}/health`;
+                    const url = `http://localhost:${port}/api/health`;
                     fetch(url, { method: 'HEAD' })
                         .then(() => {
                             addLog('success', `Port ${port} (HTTP) is accessible`);
