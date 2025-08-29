@@ -60,7 +60,7 @@ def generate_launch_description():
     
     # Docker compose execution (alternative to native ROS2)
     docker_compose_up = ExecuteProcess(
-        cmd=['docker compose', 'up', '--build'],
+        cmd=['docker', 'compose', 'up', '--build'],
         name='docker_compose',
         output='screen',
         cwd='.'
